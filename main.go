@@ -36,5 +36,11 @@ func main() {
 		return c.JSON(str)
 	})
 
+	app.Post("/inet", func(c *fiber.Ctx) error {
+		a := c.Query("search")
+		str := "my search is " + a
+		return c.JSON(str)
+	})
+
 	app.Listen(":3000")
 }
