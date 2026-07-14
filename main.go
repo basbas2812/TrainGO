@@ -1,57 +1,37 @@
 package main
 
 import (
-	"log"
+	"fmt"
+	"go-fiber-test/database"
+	m "go-fiber-test/models"
+	"go-fiber-test/routes"
 
 	"github.com/gofiber/fiber/v2"
-	"github.com/gofiber/fiber/v2/middleware/basicauth"
+	"gorm.io/driver/mysql"
+	"gorm.io/gorm"
 )
+
+func initDatabase() {
+	dsn := fmt.Sprintf(
+		"%s:%s@tcp(%s:%s)/%s?charset=utf8mb4&parseTime=true&loc=Local",
+		"root",
+		"",
+		"127.0.0.1",
+		"3306",
+		"golang_test",
+	)
+	var err error
+	database.DBConn, err = gorm.Open(mysql.Open(dsn), &gorm.Config{})
+	if err != nil {
+		panic(err)
+	}
+	fmt.Println("Database connected!")
+	database.DBConn.AutoMigrate(&m.Dogs{})
+}
 
 func main() {
 	app := fiber.New()
-
-	app.Use(basicauth.New(basicauth.Config{
-		Users: map[string]string{
-			"john":  "doe",
-			"admin": "123456",
-		},
-	}))
-
-	api := app.Group("/api")
-	v1 := api.Group("/v1")
-
-	v1.Get("/", func(c *fiber.Ctx) error {
-		return c.SendString("Hello World!!!")
-	})
-
-	type Person struct {
-		Name string `json:"name"`
-		Pass string `json:"pass"`
-	}
-
-	v1.Post("/", func(c *fiber.Ctx) error {
-		p := new(Person)
-
-		if err := c.BodyParser(p); err != nil {
-			return err
-		}
-
-		log.Println(p.Name)
-		log.Println(p.Pass)
-		str := p.Name + p.Pass
-		return c.JSON(str)
-	})
-
-	v1.Get("/user/:name", func(c *fiber.Ctx) error {
-		str := "hello ==> " + c.Params("name")
-		return c.JSON(str)
-	})
-
-	v1.Post("/inet", func(c *fiber.Ctx) error {
-		a := c.Query("search")
-		str := "my search is " + a
-		return c.JSON(str)
-	})
-
+	initDatabase()
+	routes.InetRoutes(app)
 	app.Listen(":3000")
 }
