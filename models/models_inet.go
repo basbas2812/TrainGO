@@ -18,3 +18,13 @@ type Dogs struct {
 	Name  string `json:"name"`
 	DogID int    `json:"dog_id"`
 }
+
+type Register struct {
+	Email        string `json:"email"`
+	Username     string `json:"username"`
+	Password     string `json:"password"`
+	LineID       string `json:"lineid"`
+	PhoneID      string `json:"phoneid"`
+	BusinessType string `json:"businesstype"`
+	WebsiteName  string `json:"websitename"`
+}

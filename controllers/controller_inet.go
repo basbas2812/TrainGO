@@ -2,6 +2,8 @@ package controllers
 
 import (
 	"log"
+	"regexp"
+	"strconv"
 	"strings"
 
 	"go-fiber-test/database"
@@ -160,4 +162,67 @@ func GetDogsJson(c *fiber.Ctx) error {
 		Count: len(dogs), //หาผลรวม,
 	}
 	return c.Status(200).JSON(r)
+}
+
+func Factorial(c *fiber.Ctx) error {
+	n, err := strconv.Atoi(c.Params("number"))
+	if err != nil {
+		return c.Status(400).SendString("invalid number")
+	}
+	fact := 1
+	for i := 1; i <= n; i++ {
+		fact *= i
+	}
+	return c.Status(200).SendString(strconv.Itoa(fact))
+}
+
+func Ascii(c *fiber.Ctx) error {
+	taxID := c.Query("tax_id")
+	if taxID == "" {
+		return c.Status(400).SendString("tax_id is required")
+	}
+	var result []string
+	for _, char := range taxID {
+		result = append(result, strconv.Itoa(int(char)))
+	}
+	return c.Status(200).SendString(strings.Join(result, " "))
+}
+
+func Register(c *fiber.Ctx) error {
+	reg := new(m.Register)
+	if err := c.BodyParser(&reg); err != nil {
+		return c.Status(400).JSON(fiber.Map{"message": "ข้อมูลไม่ถูกต้อง"})
+	}
+
+	patterns := map[string]string{
+		"email":        `^[a-zA-Z0-9._%+\-]+@[a-zA-Z0-9.\-]+\.[a-zA-Z]{2,}$`,
+		"username":     `^[a-zA-Z0-9_-]+$`,
+		"password":     `^.{6,20}$`,
+		"lineid":       `^[a-zA-Z0-9_-]+$`,
+		"phoneid":      `^[0-9]+$`,
+		"businesstype": `^[a-zA-Z0-9_-]+$`,
+		"websitename":  `^[a-z0-9\-]{2,30}$`,
+	}
+
+	values := map[string]string{
+		"email":        reg.Email,
+		"username":     reg.Username,
+		"password":     reg.Password,
+		"lineid":       reg.LineID,
+		"phoneid":      reg.PhoneID,
+		"businesstype": reg.BusinessType,
+		"websitename":  reg.WebsiteName,
+	}
+
+	for field, pattern := range patterns {
+		matched, _ := regexp.MatchString(pattern, values[field])
+		if !matched {
+			return c.Status(400).JSON(fiber.Map{
+				"message": "ใส่ข้อมูลผิดพลาด",
+				"field":   field,
+			})
+		}
+	}
+
+	return c.Status(201).JSON(fiber.Map{"message": "สมัครสมาชิกสำเร็จ"})
 }
