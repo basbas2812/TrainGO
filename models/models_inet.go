@@ -28,3 +28,9 @@ type Register struct {
 	BusinessType string `json:"businesstype"`
 	WebsiteName  string `json:"websitename"`
 }
+
+type DogsRes struct {
+	Name  string `json:"name"`
+	DogID int    `json:"dog_id"`
+	Type  string `json:"type"`
+}
