@@ -17,7 +17,10 @@ func main() {
 		},
 	}))
 
-	app.Get("/", func(c *fiber.Ctx) error {
+	api := app.Group("/api")
+	v1 := api.Group("/v1")
+
+	v1.Get("/", func(c *fiber.Ctx) error {
 		return c.SendString("Hello World!!!")
 	})
 
@@ -26,7 +29,7 @@ func main() {
 		Pass string `json:"pass"`
 	}
 
-	app.Post("/", func(c *fiber.Ctx) error {
+	v1.Post("/", func(c *fiber.Ctx) error {
 		p := new(Person)
 
 		if err := c.BodyParser(p); err != nil {
@@ -39,12 +42,12 @@ func main() {
 		return c.JSON(str)
 	})
 
-	app.Get("/user/:name", func(c *fiber.Ctx) error {
+	v1.Get("/user/:name", func(c *fiber.Ctx) error {
 		str := "hello ==> " + c.Params("name")
 		return c.JSON(str)
 	})
 
-	app.Post("/inet", func(c *fiber.Ctx) error {
+	v1.Post("/inet", func(c *fiber.Ctx) error {
 		a := c.Query("search")
 		str := "my search is " + a
 		return c.JSON(str)
