@@ -27,7 +27,10 @@ func initDatabase() {
 		panic(err)
 	}
 	fmt.Println("Database connected!")
-	database.DBConn.AutoMigrate(&m.Dogs{})
+	if err := database.DBConn.AutoMigrate(&m.Dogs{}, &m.Company{}); err != nil {
+		panic("AutoMigrate failed: " + err.Error())
+	}
+	fmt.Println("Migration completed!")
 }
 
 func No0() {
@@ -108,7 +111,6 @@ func No5() {
 			"address": "Phuket",
 		},
 	}
-	// fmt.Println(data)
 	for i, v := range data {
 		fmt.Printf("%d. name: %s, Address: %s\n", i+1, v["name"], v["Address"])
 	}

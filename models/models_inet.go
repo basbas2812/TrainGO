@@ -34,3 +34,18 @@ type DogsRes struct {
 	DogID int    `json:"dog_id"`
 	Type  string `json:"type"`
 }
+
+type Company struct {
+	gorm.Model
+	Name     string `json:"name"`
+	Address  string `json:"address"`
+	Tel      string `json:"telephone"`
+	EmpCount int    `json:"emp_count"`
+	IsActive bool   `json:"is_active"`
+}
+
+type DogColor struct {
+	Name  string `json:"name"`
+	DogID int    `json:"dog_id"`
+	Color string `json:"color"`
+}

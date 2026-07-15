@@ -220,3 +220,120 @@ func Register(c *fiber.Ctx) error {
 
 	return c.Status(201).JSON(fiber.Map{"message": "สมัครสมาชิกสำเร็จ"})
 }
+
+func AddCompany(c *fiber.Ctx) error {
+	company := new(m.Company)
+	if err := c.BodyParser(&company); err != nil {
+		return c.Status(400).JSON(fiber.Map{"message": "ข้อมูลไม่ถูกต้อง"})
+	}
+	if err := database.DBConn.Create(&company).Error; err != nil {
+		return c.Status(500).JSON(fiber.Map{"message": "เกิดข้อผิดพลาด"})
+	}
+	return c.Status(201).JSON(fiber.Map{"message": "เพิ่มบริษัทสำเร็จ"})
+}
+
+func GetAllCompanies(c *fiber.Ctx) error {
+	companies := []m.Company{}
+	if err := database.DBConn.Find(&companies).Error; err != nil {
+		return c.Status(500).JSON(fiber.Map{"message": "เกิดข้อผิดพลาด"})
+	}
+	return c.Status(200).JSON(companies)
+}
+
+func GetIDCompany(c *fiber.Ctx) error {
+	id := c.Params("id")
+	company := m.Company{}
+	if err := database.DBConn.First(&company, id).Error; err != nil {
+		return c.Status(500).JSON(fiber.Map{"message": "เกิดข้อผิดพลาด"})
+	}
+	return c.Status(200).JSON(company)
+}
+
+func UpdateCompany(c *fiber.Ctx) error {
+	id := c.Params("id")
+	company := m.Company{}
+	if err := database.DBConn.First(&company, id).Error; err != nil {
+		return c.Status(500).JSON(fiber.Map{"message": "เกิดข้อผิดพลาด"})
+	}
+	if err := c.BodyParser(&company); err != nil {
+		return c.Status(400).JSON(fiber.Map{"message": "ข้อมูลไม่ถูกต้อง"})
+	}
+	if err := database.DBConn.Save(&company).Error; err != nil {
+		return c.Status(500).JSON(fiber.Map{"message": "เกิดข้อผิดพลาด"})
+	}
+	return c.Status(200).JSON(fiber.Map{"message": "อัปเดตบริษัทสำเร็จ"})
+}
+
+func DeleteCompany(c *fiber.Ctx) error {
+	id := c.Params("id")
+	company := m.Company{}
+	if err := database.DBConn.First(&company, id).Error; err != nil {
+		return c.Status(500).JSON(fiber.Map{"message": "เกิดข้อผิดพลาด"})
+	}
+	falseVal := false
+	database.DBConn.Model(&company).Update("is_active", &falseVal)
+	if err := database.DBConn.Delete(&company).Error; err != nil {
+		return c.Status(500).JSON(fiber.Map{"message": "เกิดข้อผิดพลาด"})
+	}
+	return c.Status(200).JSON(fiber.Map{"message": "ลบบริษัทสำเร็จ"})
+}
+
+func GetDeletedDogs(c *fiber.Ctx) error {
+	dogs := []m.Dogs{}
+	if err := database.DBConn.Unscoped().Where("deleted_at IS NOT NULL").Find(&dogs).Error; err != nil {
+		return c.Status(500).JSON(fiber.Map{"message": "เกิดข้อผิดพลาด"})
+	}
+	return c.Status(200).JSON(dogs)
+}
+
+func GetDogIDFiftytoHundred(c *fiber.Ctx) error {
+	dogs := []m.Dogs{}
+	if err := database.DBConn.Find(&dogs, "dog_id BETWEEN 50 AND 100").Error; err != nil {
+		return c.Status(500).JSON(fiber.Map{"message": "เกิดข้อผิดพลาด"})
+	}
+	return c.Status(200).JSON(dogs)
+}
+
+func GetDogIDSumColor(c *fiber.Ctx) error {
+	dogs := []m.Dogs{}
+	if err := database.DBConn.Find(&dogs).Error; err != nil {
+		return c.Status(500).JSON(fiber.Map{"message": "เกิดข้อผิดพลาด"})
+	}
+
+	var dbName string
+	database.DBConn.Raw("SELECT DATABASE()").Scan(&dbName)
+
+	sumRed := 0
+	sumGreen := 0
+	sumPink := 0
+	sumNocolor := 0
+
+	var data []m.DogColor
+	for _, dog := range dogs {
+		color := "no color"
+		if dog.DogID >= 10 && dog.DogID <= 50 {
+			color = "red"
+			sumRed++
+		} else if dog.DogID >= 100 && dog.DogID <= 150 {
+			color = "green"
+			sumGreen++
+		} else if dog.DogID >= 200 && dog.DogID <= 250 {
+			color = "pink"
+			sumPink++
+		} else {
+			sumNocolor++
+		}
+		data = append(data, m.DogColor{Name: dog.Name, DogID: dog.DogID, Color: color})
+	}
+
+	return c.Status(200).JSON(fiber.Map{
+		"database":    dbName,
+		"count":       len(dogs),
+		"data":        data,
+		"sum_red":     sumRed,
+		"sum_green":   sumGreen,
+		"sum_pink":    sumPink,
+		"sum_nocolor": sumNocolor,
+	})
+
+}
