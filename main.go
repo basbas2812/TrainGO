@@ -63,14 +63,17 @@ func No2() {
 	x := []int{
 		48, 96, 86, 68, 57, 82, 63, 70, 37, 34, 83, 27, 19, 97, 9, 17,
 	}
-	for i := 0; i < len(x)-1; i++ {
-		for j := 0; j < len(x)-1-i; j++ {
-			if x[j] > x[j+1] {
-				x[j], x[j+1] = x[j+1], x[j]
-			}
+	min := x[0]
+	max := x[0]
+	for _, v := range x {
+		if v < min {
+			min = v
+		}
+		if v > max {
+			max = v
 		}
 	}
-	fmt.Println(x)
+	fmt.Println("min =", min, "max =", max)
 }
 
 func No3(n int) int {
@@ -145,6 +148,14 @@ func No6() {
 	}
 }
 
+func Power(num int, exp int) int {
+	result := 1
+	for i := 0; i < exp; i++ {
+		result *= num
+	}
+	return result
+}
+
 func NoExtra() {
 	for i := 0; i <= 6; i++ {
 		stars := ""
@@ -159,8 +170,9 @@ func main() {
 	app := fiber.New()
 	initDatabase()
 	routes.InetRoutes(app)
-	No0()
-	No1()
+	// No0()
+	// No1()
+	// Power(20, 2)
 	No2()
 	fmt.Println("จำนวนเลข 9 (1-1000):", No3(1000))
 	fmt.Println(No4("AW SOME GO!"))
