@@ -120,40 +120,42 @@ func RemoveDog(c *fiber.Ctx) error {
 func GetDogsJson(c *fiber.Ctx) error {
 	db := database.DBConn
 	var dogs []m.Dogs
-
-	db.Find(&dogs) //10ตัว
+	db.Find(&dogs)
 
 	var dataResults []m.DogsRes
-	for _, v := range dogs { //1 inet 112 //2 inet1 113
-		typeStr := ""
-		if v.DogID == 111 {
-			typeStr = "red"
-		} else if v.DogID == 113 {
-			typeStr = "green"
-		} else if v.DogID == 999 {
-			typeStr = "pink"
+	sumRed, sumGreen, sumPink, sumNocolor := 0, 0, 0, 0
+
+	for _, v := range dogs {
+		color := "no color"
+		if v.DogID >= 10 && v.DogID <= 50 {
+			color = "red"
+			sumRed++
+		} else if v.DogID >= 100 && v.DogID <= 150 {
+			color = "green"
+			sumGreen++
+		} else if v.DogID >= 200 && v.DogID <= 250 {
+			color = "pink"
+			sumPink++
 		} else {
-			typeStr = "no color"
+			sumNocolor++
 		}
 
-		d := m.DogsRes{
-			Name:  v.Name,  //inet
-			DogID: v.DogID, //112
-			Type:  typeStr, //no color
-		}
-		dataResults = append(dataResults, d)
+		dataResults = append(dataResults, m.DogsRes{
+			Name:  v.Name,
+			DogID: v.DogID,
+			Type:  color,
+		})
 		// sumAmount += v.Amount
 	}
 
-	type ResultData struct {
-		Data  []m.DogsRes `json:"data"`
-		Name  string      `json:"name"`
-		Count int         `json:"count"`
-	}
-	r := ResultData{
-		Data:  dataResults,
-		Name:  "golang-test",
-		Count: len(dogs), //หาผลรวม,
+	r := m.ResultData{
+		Data:       dataResults,
+		Name:       "golang-test",
+		Count:      len(dogs),
+		SumRed:     sumRed,
+		SumGreen:   sumGreen,
+		SumPink:    sumPink,
+		SumNocolor: sumNocolor,
 	}
 	return c.Status(200).JSON(r)
 }
@@ -308,52 +310,8 @@ func GetDeletedDogs(c *fiber.Ctx) error {
 
 func GetDogIDFiftytoHundred(c *fiber.Ctx) error {
 	dogs := []m.Dogs{}
-	if err := database.DBConn.Find(&dogs, "dog_id BETWEEN 50 AND 100").Error; err != nil {
+	if err := database.DBConn.Find(&dogs, "dog_id BETWEEN 51 AND 99").Error; err != nil {
 		return c.Status(500).SendString("เกิดข้อผิดพลาด")
 	}
 	return c.Status(200).JSON(dogs)
-}
-
-func GetDogIDSumColor(c *fiber.Ctx) error {
-	dogs := []m.Dogs{}
-	if err := database.DBConn.Find(&dogs).Error; err != nil {
-		return c.Status(500).SendString("เกิดข้อผิดพลาด")
-	}
-
-	var dbName string
-	database.DBConn.Raw("SELECT DATABASE()").Scan(&dbName)
-
-	sumRed := 0
-	sumGreen := 0
-	sumPink := 0
-	sumNocolor := 0
-
-	var data []m.DogColor
-	for _, dog := range dogs {
-		color := "no color"
-		if dog.DogID >= 10 && dog.DogID <= 50 {
-			color = "red"
-			sumRed++
-		} else if dog.DogID >= 100 && dog.DogID <= 150 {
-			color = "green"
-			sumGreen++
-		} else if dog.DogID >= 200 && dog.DogID <= 250 {
-			color = "pink"
-			sumPink++
-		} else {
-			sumNocolor++
-		}
-		data = append(data, m.DogColor{Name: dog.Name, DogID: dog.DogID, Color: color})
-	}
-
-	return c.Status(200).JSON(fiber.Map{
-		"database":    dbName,
-		"count":       len(dogs),
-		"data":        data,
-		"sum_red":     sumRed,
-		"sum_green":   sumGreen,
-		"sum_pink":    sumPink,
-		"sum_nocolor": sumNocolor,
-	})
-
 }

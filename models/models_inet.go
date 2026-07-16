@@ -19,6 +19,16 @@ type Dogs struct {
 	DogID int    `json:"dog_id"`
 }
 
+type ResultData struct {
+	Data       []DogsRes `json:"data"`
+	Name       string    `json:"name"`
+	Count      int       `json:"count"`
+	SumRed     int       `json:"sum_red"`
+	SumGreen   int       `json:"sum_green"`
+	SumPink    int       `json:"sum_pink"`
+	SumNocolor int       `json:"sum_nocolor"`
+}
+
 type Register struct {
 	Email        string `json:"email"        validate:"required,email"`
 	Username     string `json:"username"     validate:"required,username"`
@@ -42,10 +52,4 @@ type Company struct {
 	Tel      string `json:"telephone"`
 	EmpCount int    `json:"emp_count"`
 	IsActive bool   `json:"is_active"`
-}
-
-type DogColor struct {
-	Name  string `json:"name"`
-	DogID int    `json:"dog_id"`
-	Color string `json:"color"`
 }
