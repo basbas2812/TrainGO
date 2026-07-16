@@ -23,7 +23,7 @@ func InetRoutes(app *fiber.App) {
 	v1.Get("/user/:name", c.ParamName)
 	v1.Post("/inet", c.QueryName)
 	v1.Post("/valid", c.ValidateTest)
-	v1.Get("/fact/:number", c.Factorial)
+	v1.Get("/fact/:number?", c.Factorial)
 	v1.Post("/register", c.Register)
 
 	//CRUD dogs
