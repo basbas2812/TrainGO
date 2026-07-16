@@ -159,9 +159,16 @@ func GetDogsJson(c *fiber.Ctx) error {
 }
 
 func Factorial(c *fiber.Ctx) error {
-	n, err := strconv.Atoi(c.Params("number"))
+	param := c.Params("number")
+	if param == "" {
+		return c.Status(400).SendString("number is required.")
+	}
+	n, err := strconv.Atoi(param)
 	if err != nil {
-		return c.Status(400).SendString("invalid number")
+		return c.Status(400).SendString("invalid number.")
+	}
+	if n < 0 {
+		return c.Status(400).SendString("number must not be negative.")
 	}
 	fact := 1
 	for i := 1; i <= n; i++ {

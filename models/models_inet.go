@@ -24,7 +24,7 @@ type Register struct {
 	Username     string `json:"username"     validate:"required,username"`
 	Password     string `json:"password"     validate:"required,min=6,max=20"`
 	LineID       string `json:"lineid"       validate:"required,lineid"`
-	PhoneID      string `json:"phoneid"      validate:"required,numeric"`
+	PhoneID      string `json:"phoneid"      validate:"required,min=9,max=10,numeric"`
 	BusinessType string `json:"businesstype" validate:"required,business_allowed"`
 	WebsiteName  string `json:"websitename"  validate:"required,min=2,max=30,websitename"`
 }
