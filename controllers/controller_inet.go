@@ -185,57 +185,70 @@ func Ascii(c *fiber.Ctx) error {
 func Register(c *fiber.Ctx) error {
 	reg := new(m.Register)
 	if err := c.BodyParser(&reg); err != nil {
-		return c.Status(400).JSON(fiber.Map{"message": "ข้อมูลไม่ถูกต้อง"})
+		return c.Status(400).SendString("ข้อมูลไม่ถูกต้อง")
 	}
 
-	patterns := map[string]string{
-		"email":        `^[a-zA-Z0-9._%+\-]+@[a-zA-Z0-9.\-]+\.[a-zA-Z]{2,}$`,
-		"username":     `^[a-zA-Z0-9_-]+$`,
-		"password":     `^.{6,20}$`,
-		"lineid":       `^[a-zA-Z0-9_-]+$`,
-		"phoneid":      `^[0-9]+$`,
-		"businesstype": `^[a-zA-Z0-9_-]+$`,
-		"websitename":  `^[a-z0-9\-]{2,30}$`,
-	}
-
-	values := map[string]string{
-		"email":        reg.Email,
-		"username":     reg.Username,
-		"password":     reg.Password,
-		"lineid":       reg.LineID,
-		"phoneid":      reg.PhoneID,
-		"businesstype": reg.BusinessType,
-		"websitename":  reg.WebsiteName,
-	}
-
-	for field, pattern := range patterns {
-		matched, _ := regexp.MatchString(pattern, values[field])
-		if !matched {
-			return c.Status(400).JSON(fiber.Map{
-				"message": "ใส่ข้อมูลผิดพลาด",
-				"field":   field,
-			})
+	validate := validator.New()
+	validate.RegisterValidation("username", func(fl validator.FieldLevel) bool {
+		matched, _ := regexp.MatchString(`^[A-Za-z0-9_-]{3,20}$`, fl.Field().String())
+		return matched
+	})
+	validate.RegisterValidation("lineid", func(fl validator.FieldLevel) bool {
+		matched, _ := regexp.MatchString(`^[A-Za-z0-9_-]{4,20}$`, fl.Field().String())
+		return matched
+	})
+	validate.RegisterValidation("business_allowed", func(fl validator.FieldLevel) bool {
+		allowed := map[string]bool{
+			"retail":  true,
+			"service": true,
+			"it":      true,
+			"finance": true,
+			"other":   true,
 		}
+		return allowed[fl.Field().String()]
+	})
+	validate.RegisterValidation("websitename", func(fl validator.FieldLevel) bool {
+		value := fl.Field().String()
+		allowedSuffixes := []string{
+			".sogoodweb.com",
+			".sogoodweb.co.th",
+			".sogoodweb.in.th",
+		}
+		for _, suffix := range allowedSuffixes {
+			if strings.HasSuffix(value, suffix) {
+				prefix := strings.TrimSuffix(value, suffix)
+				matched, _ := regexp.MatchString(`^[a-z0-9\-]{2,30}$`, prefix)
+				return matched
+			}
+		}
+		return false
+	})
+
+	if err := validate.Struct(reg); err != nil {
+		return c.Status(400).JSON(fiber.Map{
+			"message": "ใส่ข้อมูลผิดพลาด",
+			"errors":  err.Error(),
+		})
 	}
 
-	return c.Status(201).JSON(fiber.Map{"message": "สมัครสมาชิกสำเร็จ"})
+	return c.Status(201).SendString("สมัครสมาชิกสำเร็จ")
 }
 
 func AddCompany(c *fiber.Ctx) error {
 	company := new(m.Company)
 	if err := c.BodyParser(&company); err != nil {
-		return c.Status(400).JSON(fiber.Map{"message": "ข้อมูลไม่ถูกต้อง"})
+		return c.Status(400).SendString("ข้อมูลไม่ถูกต้อง")
 	}
 	if err := database.DBConn.Create(&company).Error; err != nil {
-		return c.Status(500).JSON(fiber.Map{"message": "เกิดข้อผิดพลาด"})
+		return c.Status(500).SendString("เกิดข้อผิดพลาด")
 	}
-	return c.Status(201).JSON(fiber.Map{"message": "เพิ่มบริษัทสำเร็จ"})
+	return c.Status(201).SendString("เพิ่มบริษัทสำเร็จ")
 }
 
 func GetAllCompanies(c *fiber.Ctx) error {
 	companies := []m.Company{}
 	if err := database.DBConn.Find(&companies).Error; err != nil {
-		return c.Status(500).JSON(fiber.Map{"message": "เกิดข้อผิดพลาด"})
+		return c.Status(500).SendString("เกิดข้อผิดพลาด")
 	}
 	return c.Status(200).JSON(companies)
 }
@@ -244,7 +257,7 @@ func GetIDCompany(c *fiber.Ctx) error {
 	id := c.Params("id")
 	company := m.Company{}
 	if err := database.DBConn.First(&company, id).Error; err != nil {
-		return c.Status(500).JSON(fiber.Map{"message": "เกิดข้อผิดพลาด"})
+		return c.Status(500).SendString("เกิดข้อผิดพลาด")
 	}
 	return c.Status(200).JSON(company)
 }
@@ -253,35 +266,35 @@ func UpdateCompany(c *fiber.Ctx) error {
 	id := c.Params("id")
 	company := m.Company{}
 	if err := database.DBConn.First(&company, id).Error; err != nil {
-		return c.Status(500).JSON(fiber.Map{"message": "เกิดข้อผิดพลาด"})
+		return c.Status(500).SendString("เกิดข้อผิดพลาด")
 	}
 	if err := c.BodyParser(&company); err != nil {
-		return c.Status(400).JSON(fiber.Map{"message": "ข้อมูลไม่ถูกต้อง"})
+		return c.Status(400).SendString("ข้อมูลไม่ถูกต้อง")
 	}
 	if err := database.DBConn.Save(&company).Error; err != nil {
-		return c.Status(500).JSON(fiber.Map{"message": "เกิดข้อผิดพลาด"})
+		return c.Status(500).SendString("เกิดข้อผิดพลาด")
 	}
-	return c.Status(200).JSON(fiber.Map{"message": "อัปเดตบริษัทสำเร็จ"})
+	return c.Status(200).SendString("อัปเดตบริษัทสำเร็จ")
 }
 
 func DeleteCompany(c *fiber.Ctx) error {
 	id := c.Params("id")
 	company := m.Company{}
 	if err := database.DBConn.First(&company, id).Error; err != nil {
-		return c.Status(500).JSON(fiber.Map{"message": "เกิดข้อผิดพลาด"})
+		return c.Status(500).SendString("เกิดข้อผิดพลาด")
 	}
 	falseVal := false
 	database.DBConn.Model(&company).Update("is_active", &falseVal)
 	if err := database.DBConn.Delete(&company).Error; err != nil {
-		return c.Status(500).JSON(fiber.Map{"message": "เกิดข้อผิดพลาด"})
+		return c.Status(500).SendString("เกิดข้อผิดพลาด")
 	}
-	return c.Status(200).JSON(fiber.Map{"message": "ลบบริษัทสำเร็จ"})
+	return c.Status(200).SendString("ลบบริษัทสำเร็จ")
 }
 
 func GetDeletedDogs(c *fiber.Ctx) error {
 	dogs := []m.Dogs{}
 	if err := database.DBConn.Unscoped().Where("deleted_at IS NOT NULL").Find(&dogs).Error; err != nil {
-		return c.Status(500).JSON(fiber.Map{"message": "เกิดข้อผิดพลาด"})
+		return c.Status(500).SendString("เกิดข้อผิดพลาด")
 	}
 	return c.Status(200).JSON(dogs)
 }
@@ -289,7 +302,7 @@ func GetDeletedDogs(c *fiber.Ctx) error {
 func GetDogIDFiftytoHundred(c *fiber.Ctx) error {
 	dogs := []m.Dogs{}
 	if err := database.DBConn.Find(&dogs, "dog_id BETWEEN 50 AND 100").Error; err != nil {
-		return c.Status(500).JSON(fiber.Map{"message": "เกิดข้อผิดพลาด"})
+		return c.Status(500).SendString("เกิดข้อผิดพลาด")
 	}
 	return c.Status(200).JSON(dogs)
 }
@@ -297,7 +310,7 @@ func GetDogIDFiftytoHundred(c *fiber.Ctx) error {
 func GetDogIDSumColor(c *fiber.Ctx) error {
 	dogs := []m.Dogs{}
 	if err := database.DBConn.Find(&dogs).Error; err != nil {
-		return c.Status(500).JSON(fiber.Map{"message": "เกิดข้อผิดพลาด"})
+		return c.Status(500).SendString("เกิดข้อผิดพลาด")
 	}
 
 	var dbName string

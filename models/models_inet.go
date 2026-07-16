@@ -20,13 +20,13 @@ type Dogs struct {
 }
 
 type Register struct {
-	Email        string `json:"email"`
-	Username     string `json:"username"`
-	Password     string `json:"password"`
-	LineID       string `json:"lineid"`
-	PhoneID      string `json:"phoneid"`
-	BusinessType string `json:"businesstype"`
-	WebsiteName  string `json:"websitename"`
+	Email        string `json:"email"        validate:"required,email"`
+	Username     string `json:"username"     validate:"required,username"`
+	Password     string `json:"password"     validate:"required,min=6,max=20"`
+	LineID       string `json:"lineid"       validate:"required,lineid"`
+	PhoneID      string `json:"phoneid"      validate:"required,numeric"`
+	BusinessType string `json:"businesstype" validate:"required,business_allowed"`
+	WebsiteName  string `json:"websitename"  validate:"required,min=2,max=30,websitename"`
 }
 
 type DogsRes struct {
