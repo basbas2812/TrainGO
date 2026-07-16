@@ -19,6 +19,12 @@ type Dogs struct {
 	DogID int    `json:"dog_id"`
 }
 
+type DogsRes struct {
+	Name  string `json:"name"`
+	DogID int    `json:"dog_id"`
+	Type  string `json:"type"`
+}
+
 type ResultData struct {
 	Data       []DogsRes `json:"data"`
 	Name       string    `json:"name"`
@@ -37,12 +43,6 @@ type Register struct {
 	PhoneID      string `json:"phoneid"      validate:"required,min=9,max=10,numeric"`
 	BusinessType string `json:"businesstype" validate:"required,business_allowed"`
 	WebsiteName  string `json:"websitename"  validate:"required,min=2,max=30,websitename"`
-}
-
-type DogsRes struct {
-	Name  string `json:"name"`
-	DogID int    `json:"dog_id"`
-	Type  string `json:"type"`
 }
 
 type Company struct {
